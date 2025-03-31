@@ -15,7 +15,7 @@ if (!PEXELS_API_KEY) {
 }
 
 // Create bot instance
-const bot = new TelegramBot(TELEGRAM_TOKEN, { pollingdeviating polling: true });
+const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 
 // Pexels API configuration
 const pexelsClient = axios.create({
