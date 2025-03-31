@@ -1,12 +1,21 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
-// Replace with your actual API keys
+// Get API keys from environment variables
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 
+// Validate Telegram token
+if (!TELEGRAM_TOKEN) {
+    throw new Error('Telegram Bot Token not provided! Please set TELEGRAM_TOKEN environment variable.');
+}
+
+if (!PEXELS_API_KEY) {
+    throw new Error('Pexels API Key not provided! Please set PEXELS_API_KEY environment variable.');
+}
+
 // Create bot instance
-const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+const bot = new TelegramBot(TELEGRAM_TOKEN, { pollingdeviating polling: true });
 
 // Pexels API configuration
 const pexelsClient = axios.create({
@@ -21,7 +30,8 @@ const lastIndices = new Map();
 
 async function getWallpaper(chatId, searchQuery = 'dark car') {
     try {
-        const response = await pexelsClient.get('search', {
+        // First attempt with the exact search query
+        let response = await pexelsClient.get('search', {
             params: {
                 query: searchQuery,
                 per_page: 80,
@@ -29,7 +39,20 @@ async function getWallpaper(chatId, searchQuery = 'dark car') {
             }
         });
 
-        const photos = response.data.photos;
+        let photos = response.data.photos;
+        // If no results, try a broader search by splitting terms
+        if (!photos || photos.length === 0) {
+            const fallbackQuery = searchQuery.split(' ')[0]; // Use first word as fallback
+            response = await pexelsClient.get('search', {
+                params: {
+                    query: fallbackQuery,
+                    per_page: 80,
+                    orientation: 'portrait'
+                }
+            });
+            photos = response.data.photos;
+        }
+
         if (!photos || photos.length === 0) {
             throw new Error('No wallpapers found');
         }
@@ -50,7 +73,7 @@ async function getWallpaper(chatId, searchQuery = 'dark car') {
 }
 
 // Handle "new wal" command
-bot.onText(/new/, async (msg) => {
+bot.onText(/new wal/, async (msg) => {
     const chatId = msg.chat.id;
     
     try {
@@ -73,10 +96,10 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
         bot.sendMessage(chatId, `Searching for "${searchTerm}" wallpaper...`);
         const wallpaperUrl = await getWallpaper(chatId, searchTerm);
         await bot.sendPhoto(chatId, wallpaperUrl, {
-            caption: `Here's a wallpaper for "${searchTerm}"!`
+            caption: `Here's a wallpaper matching "${searchTerm}"!`
         });
     } catch (error) {
-        bot.sendMessage(chatId, `Sorry, couldn\'t find any wallpapers for "${searchTerm}". Try something else!`);
+        bot.sendMessage(chatId, `Sorry, couldn\'t find any wallpapers for "${searchTerm}". Try a different term!`);
     }
 });
 
@@ -84,8 +107,8 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, `Welcome! 
-- Send "new" for a dark car wallpaper
-- Use "/search [term]" to search for any wallpaper (e.g., "/search sunset")`);
+- Send "new wal" for a dark car wallpaper
+- Use "/search [term]" to search for any wallpaper (e.g., "/search sunset beach")`);
 });
 
 // Log when bot starts
