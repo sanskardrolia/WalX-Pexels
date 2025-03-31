@@ -2,8 +2,8 @@ const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
 // Replace with your actual API keys
-const TELEGRAM_TOKEN = '';
-const PEXELS_API_KEY = '';
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 
 // Create bot instance
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
