@@ -31,7 +31,7 @@ const lastIndices = new Map();
 async function getWallpaper(chatId, searchQuery = 'dark car') {
     try {
         // First attempt with the exact search query
-        let response = await pexelsClient.get('search', {
+        let response = await pexelsClient.get('find', {
             params: {
                 query: searchQuery,
                 per_page: 80,
@@ -43,7 +43,7 @@ async function getWallpaper(chatId, searchQuery = 'dark car') {
         // If no results, try a broader search by splitting terms
         if (!photos || photos.length === 0) {
             const fallbackQuery = searchQuery.split(' ')[0]; // Use first word as fallback
-            response = await pexelsClient.get('search', {
+            response = await pexelsClient.get('find', {
                 params: {
                     query: fallbackQuery,
                     per_page: 80,
@@ -108,7 +108,7 @@ bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, `Welcome! 
 - Send "new wal" for a dark car wallpaper
-- Use "/search [term]" to search for any wallpaper (e.g., "/search sunset beach")`);
+- Use "/find [term]" to search for any wallpaper (e.g., "/find sunset beach")`);
 });
 
 // Log when bot starts
