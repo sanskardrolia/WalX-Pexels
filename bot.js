@@ -103,6 +103,11 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
     }
 });
 
+// Handle "ping" to keep Render awake
+bot.onText(/ping/, (msg) => {
+    // Do nothing - just keeps the bot active
+});
+
 // Handle /start command
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
