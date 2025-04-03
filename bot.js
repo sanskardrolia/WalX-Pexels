@@ -27,6 +27,8 @@ const pexelsClient = axios.create({
 
 // Store last used photo indices per chat to avoid repetition
 const lastIndices = new Map();
+// Store processed message IDs to prevent duplicates
+const processedMessages = new Set();
 
 async function getWallpaper(chatId, searchQuery = 'dark car') {
     try {
@@ -72,10 +74,20 @@ async function getWallpaper(chatId, searchQuery = 'dark car') {
     }
 }
 
+// Handle "ping" to keep Render awake
+bot.onText(/ping/, (msg) => {
+    // Do nothing - just keeps the bot active
+});
+
 // Handle "new wal" command
 bot.onText(/new wal/, async (msg) => {
     const chatId = msg.chat.id;
-    
+    const messageId = msg.message_id;
+
+    // Skip if already processed
+    if (processedMessages.has(messageId)) return;
+    processedMessages.add(messageId);
+
     try {
         bot.sendMessage(chatId, 'Fetching a new dark car wallpaper...');
         const wallpaperUrl = await getWallpaper(chatId, 'dark car');
@@ -90,8 +102,13 @@ bot.onText(/new wal/, async (msg) => {
 // Handle /search command
 bot.onText(/\/search (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
+    const messageId = msg.message_id;
     const searchTerm = match[1].trim();
-    
+
+    // Skip if already processed
+    if (processedMessages.has(messageId)) return;
+    processedMessages.add(messageId);
+
     try {
         bot.sendMessage(chatId, `Searching for "${searchTerm}" wallpaper...`);
         const wallpaperUrl = await getWallpaper(chatId, searchTerm);
@@ -103,14 +120,15 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
     }
 });
 
-// Handle "ping" to keep Render awake
-bot.onText(/ping/, (msg) => {
-    // Do nothing - just keeps the bot active
-});
-
 // Handle /start command
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
+    const messageId = msg.message_id;
+
+    // Skip if already processed
+    if (processedMessages.has(messageId)) return;
+    processedMessages.add(messageId);
+
     bot.sendMessage(chatId, `Welcome! 
 - Send "new wal" for a dark car wallpaper
 - Use "/search [term]" to search for any wallpaper (e.g., "/search sunset beach")`);
